@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import time
 from tkinter import *
 from tkinter import ttk
@@ -8,7 +7,6 @@ import serial
 import serial.tools.list_ports
 
 import pyautogui
-
 
 
 """
@@ -37,7 +35,7 @@ window_size = {"width" :  root.winfo_screenwidth() , "height" : root.winfo_scree
 
 button_style = ttk.Style()
 button_style.configure ('W.TButton', font =
-               ('calibri', 25),
+               ('Montserrat', 25),
                activecolor = 'none',
                # background=[('pressed', '#e8372a'), ('active', 'blue')],
                height=15, 
@@ -68,7 +66,7 @@ for image in picks:
 
 
 #____________COM PORT SETTINGS_________________________#
-serialPort = NULL
+serialPort = None
 print('Search...')
 ports = serial.tools.list_ports.comports(include_links=False)
 # for port in ports :
@@ -94,26 +92,34 @@ def setCanvas(parent, image):
                 image= image
                 ) 
         return canvas
-       
+
+
+import random
+
 
 def checkAnswer(question_frame, answer, gamestate):
         question_frame.destroy()
         pyautogui.moveTo(0,0)
+        print(gamestate[1])
         if answer == quize[gamestate[0]].correct_answer:
                 gamestate[1] = gamestate[1] + 1
-        gamestate[0] = gamestate[0] + 1
-
-        if gamestate[1] == 5:
-                print("Winner!")
-                serialPort.write(1)
-                gamestate[1] == 0
-        if gamestate[0] == len(quize):
-                gamestate[0] = 0
-                
-        if gamestate[0] % 5 == 0:
-                gamestate[1] = 0
-
-        count.configure(text = str(gamestate[1]) + "/5 #" + str(gamestate[0] + 1))
+        if gamestate[0] == 12:
+                gamestate[0] = random.randint(0, 2) * 5
+                if gamestate[1] >= 4:
+                        print("Winner!")
+                        try:
+                                serialPort.write(1)
+                        except Exception as e:
+                                print(e)
+                        gamestate[1] = 0
+                else:
+                        gamestate[1] = 0
+        else:
+                gamestate[0] = gamestate[0] + 1        
+        print((gamestate[0] + 1) % 5 == 0) 
+        if (gamestate[0] + 1) % 5 == 0:
+                gamestate[0] = 12 
+        count.configure(text = str(gamestate[1]) + " / 5")
         setQuestionGUI(gamestate)
         
 
@@ -124,7 +130,7 @@ def setQuestionGUI(gamestate):
         question_frame.pack(pady= 100)
         question_text = Label(question_frame,
         text = question.text, 
-        font = ('calibi', 25))
+        font = ('Montserrat', 25))
         question_text.pack()
         if question.image != "":
                 question_canvas = setCanvas(question_frame, quest_picks[int(quize[gamestate[0]].image)])
@@ -141,22 +147,20 @@ def setQuestionGUI(gamestate):
                                 :checkAnswer(f, a, gs))
                 button.pack(pady = 10, ipady = 30)
 
+root.title(title)
+#root.geometry(str(window_size["width"]) + "x" + str(window_size["height"]))
+root.attributes("-fullscreen", True)
+root.config()
+huh = time.time()
 
-if __name__ == '__main__':
-        root.title(title)
-        #root.geometry(str(window_size["width"]) + "x" + str(window_size["height"]))
-        root.attributes("-fullscreen", True)
-        root.config()
-        huh = time.time()
 
-        
-        gamestate = [0, 0]
-        logocanvas = setCanvas(root, logo)
-        logocanvas.pack(pady=window_size["height"] * 0.05)
+gamestate = [0, 0]
+logocanvas = setCanvas(root, logo)
+logocanvas.pack(pady=window_size["height"] * 0.05)
 
-        count = Label(root, text = '0/5', font =('calibi', 20, 'italic'))
-        count.pack()
-        
+count = Label(root, text = '0/5', font =('calibi', 20, 'italic'))
+count.pack()
 
-        setQuestionGUI(gamestate)
-        root.mainloop()
+
+setQuestionGUI(gamestate)
+root.mainloop()
